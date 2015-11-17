@@ -1,0 +1,23 @@
+.add-list-item {
+  position: relative;
+  border-top: 1px solid #eee;
+  padding: 40px 30px 30px;
+  margin: 50px -30px -30px;
+  background: #fafafa;
+  border-radius: 0px 0px 3px 3px;
+}
+
+.add-list-item h4 {
+  position: absolute;
+  top: -27px;
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 7px 15px;
+  border-radius: 30px;
+  color: $red;
+  font-size: 16px;
+}
+
+.add-list-item > .btn {
+  margin: 20px 0 0 0px !important;
+}

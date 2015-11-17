@@ -4,3 +4,8 @@ label.error {
   font-weight: normal;
   color: lighten( red, 20% );
 }
+
+form .input-helper-text {
+  margin-top: 10px;
+  font-size: 14px;
+}

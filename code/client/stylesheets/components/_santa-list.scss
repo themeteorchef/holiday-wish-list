@@ -1,0 +1,44 @@
+.santa-list {
+	.sortable-placeholder {
+		background: lighten( yellow, 40% );
+		list-style: none;
+		margin: 10px 0;
+		border-radius: 3px;
+		border: 1px solid darken( yellow, 5% );
+		text-align: center;
+	}
+
+	.sortable-placeholder:before {
+		content: "Move item here.";
+		color: darken( yellow, 25% );
+		position: relative;
+		top: 9px;
+	}
+}
+
+.santa-list .sp-content {
+	text-align: left;
+	
+	.send-bar {
+		text-align: center;
+		padding-bottom: 20px;
+		margin-bottom: 20px;
+		border-bottom: 1px solid #eee;
+	}
+
+  h3 {
+    font-size: 26px;
+    margin: 0 0 5px;
+  }
+
+  .santa {
+		top: -50px;
+		left: 50%;
+		margin-left: -49px;
+  }
+
+	.hint {
+		font-size: 14px;
+		margin: 0;
+	}
+}

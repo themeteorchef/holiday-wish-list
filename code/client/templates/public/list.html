@@ -1,0 +1,60 @@
+<template name="list">
+  <div class="santa-pod santa-list">
+    <div class="sp-content">
+      <div class="santa"></div>
+
+      {{#unless hasBeenSent}}
+        {{#if hasItems}}
+          {{#unless sending}}
+            <div class="send-bar">
+              <a href="#" class="btn btn-success btn-small send-to-santa"><i class="fa fa-envelope"></i> Send to North Pole</a>
+            </div>
+          {{/unless}}
+        {{/if}}
+
+        {{#unless sending}}
+          <h3>Dear Santa,</h3>
+          <p>For the holidays, I would really like it if you could send me...</p>
+
+          {{#if Template.subscriptionsReady}}
+            {{#if hasItems}}
+              <ul class="list-group sortable">
+                {{#each items}}
+                  <li data-id="{{_id}}" class="list-group-item {{#if url}}has-link{{/if}}">
+                    {{#if url}}
+                      <p>
+                        <a href="{{url}}" target="_blank">{{order}}. {{name}}</a>
+                      </p>
+                    {{else}}
+                      <p>{{order}}. {{name}}</p>
+                    {{/if}}
+                    <i class="fa fa-remove"></i>
+                  </li>
+                {{/each}}
+              </ul>
+              <p class="text-muted hint"><i class="fa fa-lightbulb-o"></i> <strong>Wish tip</strong>: drag and drop items in your list to make sure Santa Claus knows which items are most important!</p>
+            {{else}}
+              <p class="alert alert-warning">No items yet! Add some using the boxes below so Santa Claus knows what you want :)</p>
+            {{/if}}
+          {{else}}
+            <p>Loading your list...</p>
+          {{/if}}
+          {{> addListItem}}
+        {{else}}
+          {{> sendList}}
+        {{/unless}}
+      {{else}}
+        <div class="send-confirmation">
+          <h3>List sent!</h3>
+          <img src="https://tmc-post-content.s3.amazonaws.com/reindeer-express.png" alt="Reindeer Express">
+          <p>We've whisked your list off via Reindeer Express. Your parent or guardian should get it pretty soon. Don't forget to remind them to send it to Santa when you see them next :)</p>
+        </div>
+      {{/unless}}
+
+      <div class="presented-by">
+        <span>A gift from</span>
+        <a href="https://themeteorchef.com"><img src="/images/tmc-logo.png" alt="The Meteor Chef"></a>
+      </div>
+    </div>
+  </div>
+</template>

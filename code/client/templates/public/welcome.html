@@ -1,0 +1,21 @@
+<template name="welcome">
+  <div class="santa-pod santa-welcome">
+    <div class="sp-content">
+      <div class="santa"></div>
+      <h3>Dear Santa...</h3>
+      <p>Send a holiday wish list to Santa Claus! To get started, enter your name in the box below and click "Start My List!"</p>
+      <form id="create-list">
+        <label hidden for="listName">Your Name</label>
+        <input type="text" class="form-control text-center" name="listName" placeholder="Type Your Name Here">
+        <input type="submit" class="btn btn-success btn-block" value="Start My List!">
+        <p class="alert alert-info text-left"><strong>For parents/guardians:</strong> this application does not collect any sensitive or personal information from your wisher. They have the option to enter your email address to send their list along to Santa, but <strong>we <em>do not</em> record your email address</strong>. Items added to lists are stored anonymously.</p>
+      </form>
+      <div class="stocking"></div>
+      <div class="tree"></div>
+      <div class="presented-by">
+        <span>A gift from</span>
+        <a href="https://themeteorchef.com"><img src="/images/tmc-logo.png" alt="The Meteor Chef"></a>
+      </div>
+    </div>
+  </div>
+</template>

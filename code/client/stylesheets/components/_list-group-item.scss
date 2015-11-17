@@ -1,0 +1,55 @@
+.list-group-item {
+  position: relative;
+  padding: 0;
+  list-style: decimal;
+
+  .fa-remove {
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    color: $red;
+    font-size: 18px;
+  }
+
+  .fa-remove:hover {
+    cursor: pointer;
+  }
+
+  &:hover {
+    cursor: move;
+  }
+}
+
+.list-group-item.has-link:hover {
+  background: #fafafa;
+}
+
+.list-group-item.has-link a:after {
+  display: inline-block;
+  content: "\f08e";
+  font-family: "FontAwesome";
+  margin-left: 10px;
+  position: relative;
+  top: 1px;
+  z-index: 0;
+  color: $black-5;
+}
+
+.list-group-item p {
+  margin: 0;
+  padding: 10px;
+  color: $black-1;
+}
+
+.list-group-item p a {
+  display: block;
+  padding: 10px;
+  margin: -10px;
+  color: $black-1;
+
+  &:hover,
+  &:active,
+  &:focus {
+    text-decoration: none;
+  }
+}

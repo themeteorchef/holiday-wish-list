@@ -1,0 +1,40 @@
+.santa-welcome .sp-content {
+  input[type="submit"] {
+    margin: 10px 0 20px;
+  }
+
+  .alert-info {
+    font-size: 15px;
+    margin-bottom: 0px;
+  }
+
+	.santa {
+    top: -50px;
+    left: 50%;
+    margin-left: -49px;
+  }
+}
+
+@media screen and (min-width: 768px) {
+	.santa-welcome .sp-content .tree {
+    position: absolute;
+    bottom: -30px;
+    right: -45px;
+    background: url( '/images/tree.png' ) no-repeat;
+    background-size: cover;
+    display: inline-block;
+    width: 109px;
+    height: 117px;
+  }
+
+	.santa-welcome .sp-content .stocking {
+		position: absolute;
+		bottom: -35px;
+		left: -65px;
+		background: url( '/images/stocking.png' ) no-repeat;
+		background-size: cover;
+		display: inline-block;
+		width: 115px;
+		height: 126px;
+  }
+}

@@ -1,38 +1,15 @@
-const publicRedirect = () => {
-  if ( Meteor.userId() ) {
-    FlowRouter.go( 'index' );
-  }
-};
+const publicRoutes = FlowRouter.group( { name: 'public' } );
 
-const publicRoutes = FlowRouter.group({
-  name: 'public',
-  triggersEnter: [ publicRedirect ]
-});
-
-publicRoutes.route( '/signup', {
-  name: 'signup',
+publicRoutes.route( '/', {
+  name: 'welcome',
   action() {
-    BlazeLayout.render( 'default', { yield: 'signup' } );
+    BlazeLayout.render( 'default', { yield: 'welcome' } );
   }
 });
 
-publicRoutes.route( '/login', {
-  name: 'login',
+publicRoutes.route( '/lists/:_id', {
+  name: 'list',
   action() {
-    BlazeLayout.render( 'default', { yield: 'login' } );
-  }
-});
-
-publicRoutes.route( '/recover-password', {
-  name: 'recover-password',
-  action() {
-    BlazeLayout.render( 'default', { yield: 'recoverPassword' } );
-  }
-});
-
-publicRoutes.route( '/reset-password/:token', {
-  name: 'reset-password',
-  action() {
-    BlazeLayout.render( 'default', { yield: 'resetPassword' } );
+    BlazeLayout.render( 'default', { yield: 'list' } );
   }
 });

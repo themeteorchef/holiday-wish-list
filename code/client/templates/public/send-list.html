@@ -1,0 +1,14 @@
+<template name="sendList">
+  <div class="send-list">
+    <h3>Send your list to Santa</h3>
+    <p>This is it! Make super, duper, absolutely sure that your list is ready to go to Santa Claus. Because Santa is top secret, <span>you will need to send this to a parent or guardian as they have Santa's email address</span> and will send it to him directly.</p>
+    <form id="send-list">
+      <label for="emailAddress">Parent or Guardian Email Address</label>
+      <input type="email" class="form-control" name="emailAddress" placeholder="Parent or Gaurdian Email Address">
+      <div class="send-buttons">
+        <button type="submit" class="btn btn-success">Ok, send it!</button>
+        <button class="btn btn-default cancel-send">No, wait!</button>
+      </div>
+    </form>
+  </div>
+</template>

@@ -1,0 +1,12 @@
+@keyframes animatedBackground {
+	from { background-position: 0 -3000px; }
+	to { background-position: 0 3000px; }
+}
+
+body {
+  background: #BFECFD url( '/images/snow.png' ) repeat;
+	transform: translateZ(0);
+  background-size: 25%;
+  animation: animatedBackground 50s linear infinite;
+	margin: 0px 0 100px;
+}

@@ -1,0 +1,60 @@
+.santa-pod {
+  text-align: center;
+  margin-top: 100px;
+}
+
+.santa-pod .sp-content {
+  position: relative;
+  display: inline-block;
+  padding: 70px 30px 30px;
+  width: 100%;
+  max-width: 500px;
+  background: #fff;
+  text-align: center;
+  border-radius: 3px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+
+  h3 {
+    font-size: 32px;
+    margin: 0 0 10px;
+    font-family: 'Pacifico', cursive;
+    color: $red;
+  }
+
+  > p {
+    margin: 20px 0;
+  }
+
+  input:not([type="submit"]) {
+    font-size: 18px;
+    height: 40px;
+  }
+
+  .santa {
+    position: absolute;
+    background: url( '/images/santa.png' ) no-repeat;
+    background-size: cover;
+    display: inline-block;
+    width: 99px;
+    height: 98px;
+  }
+
+  .presented-by {
+    position: absolute;
+    bottom: -45px;
+    left: 50%;
+    margin-left: -115px;
+    opacity: 0.5;
+  }
+
+  .presented-by span {
+    float: left;
+    display: inline-block;
+    margin-top: 2px;
+    margin-right: 5px;
+  }
+
+  .presented-by img {
+    width: 150px;
+  }
+}
