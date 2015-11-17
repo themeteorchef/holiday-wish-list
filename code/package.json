@@ -5,6 +5,6 @@
   "scripts": {
     "start": "meteor --settings settings-development.json",
     "staging": "meteor deploy staging.meteor.com --settings settings-development.json",
-    "production": "meteor deploy production.meteor.com --settings settings-production.json"
+    "production": "modulus env set METEOR_SETTINGS \"$(cat settings-production.json | tr -d \"\n\")\" -p 'Dear Santa - Production' && modulus deploy -p 'Dear Santa - Production'"
   }
 }
