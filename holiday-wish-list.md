@@ -708,4 +708,51 @@ Yes! Exactly what we thought. We simply take the `item` object we're passing fro
 At this point we're turning some elf heads! Santa just saw the demo and let out a "ho, ho, ho!" We're almost done, just two more tasks: making it possible to remove items from our list and emailing our list to a parent or gaurdian.
 
 ### Removing items from lists
+Remember that back in our `{{> listItem}}` template, we've added a remove icon to each of our list items `<i class="fa fa-remove"></i>`. What we want to do now is handle a click event on that item, removing that item from the database. Technically we could do this from a logic file specific to the `listItem` template, but for now, we're just going to add an event handler to our `list` template's logic to keep everything consolidated.
+
+<p class="block-header">/client/templates/public/list.js</p>
+
+```javascript
+Template.list.events({
+  'click .fa-remove' ( event, template ) {
+    if ( confirm( 'Are you sure you want to delte this? It will go poof!' ) ) {
+      Meteor.call( 'deleteListItem', this._id, ( error ) => {
+        if ( error ) {
+          Bert.alert( error.reason, 'warning' );
+        } else {
+          Bert.alert( 'Poof! Item removed.', 'success' );
+          Modules.client.dragDrop.setIndexes( '.sortable li' );
+        }
+      });
+    }
+  }
+});
+```
+
+No modules here as this is pretty much a "one and done" situation. When our `.fa-remove` icon is clicked, we display a confirmation dialog, letting the wisher know that this will make their list item go poof. If they answer in the positive, we make a call to `deleteListItem` on the server, passing the value of `this._id`. What is `this`? Inside of an event handler in Meteor, when we reference `this`, we're referring to the data context of the _current template_. 
+
+Because we're inside of an `{{#each}}` loop, `this` is referring to the list item parenting the `.fa-remove` item we've clicked. This means that we can get access to that item's properties simply by calling this. Because we want to remove this specific item from the database, we grab its ID and pass it to the server. Neat!
+
+One thing to call out before we take a peek at the server. Down in the `else` statement in our method call's callback...spot it? Ahh! Our second `dragDrop` method we exposed: `setIndexes`. Do you see why we're calling this here? In addition to when we change list order via dragging, when we _remove_ an item from the list, we're technically changing the order as well. By calling the `dragDrop.setIndexes()` method here, we're saying "after this item has been removed, reset all of the indexes to account for the missing item." 
+
+Don't put on your party pants just yet. Let's hop up to the server to see the removal real quick.
+
+<p class="block-header">/path</p>
+
+```javascript
+Meteor.methods({
+  deleteListItem( itemId ) {
+    check( itemId, String );
+
+    try {
+      ListItems.remove( itemId);
+    } catch( exception ) {
+      return exception;
+    }
+  }
+});
+```
+_Sad trombone_. No, not really, but this is pretty underwhelming (a good thing). All we do here is take the ID of the list item we passed over from the client and `check()` it's type. From there, it's down the chute when we call the `ListItems.remove()` method. Poof! How easy was that? 
+
 ### Emailing lists
+Okay, this is it! The grand finale. We have _one last step_ to complete and we can consider this ready for all of Santa's wishers. 
