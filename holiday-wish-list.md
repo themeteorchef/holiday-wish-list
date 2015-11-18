@@ -360,9 +360,9 @@ Template.list.onCreated( () => {
 
 Easy peasy! Inside of our `list` template's `onCreated` method, we simply create a call to `template.subscribe` (short-handing this by storing `Template.instance()` in a variable), passing `list` as the name of the publication we'll subscribe to. The interesting part here is what we're passing in the second argument `FlowRouter.current().params._id`. Rember that when we create a new list, we're redirecting our user to `/lists/:_id`. Here, we're grabbing whatever value is currently set in the `:_id` part. Why are we passing this to our subscription? 
 
-This will make it possible to only subscribe to the list—and list items—matching that `_id`. This is both a perfomrnace and security technique. Performance, because it will prevent us from sending every list in the database down the wire, and security, because it will prevent us from wisher's seeing other wisher's lists. Real quick, let's take a peek at the publication so we know what we're getting.
+This will make it possible to only subscribe to the list—and list items—matching that `_id`. This is both a performance and security technique. Performance, because it will prevent us from sending every list in the database down the wire, and security, because it will prevent us from wisher's seeing other wisher's lists. Real quick, let's take a peek at the publication so we know what we're getting.
 
-<p class="block-header">/server/</p>
+<p class="block-header">/server/publications/lists.js</p>
 
 ```javascript
 Meteor.publish( 'list', function( listId ) {
@@ -375,9 +375,61 @@ Meteor.publish( 'list', function( listId ) {
 });
 ```
 
-#### Adding a publication to our template
+It's almost a little _too_ simple, eh? Here, we take in our `listId` argument from the client—remember, we're pulling this from the router—and using `check()` to verify that it's a string. Next, we rely on Meteor's ability to return an array of cursors from a publication, grabbing two things: all of the `Lists` with an `_id` value matching the passed `listId`, and all of the `ListItems` with a `listId` value matching the passed `listId`. Together, these two lines ensure that we'll only ever get back data for the current user's list and no one else. Great!
+
+With this in place, we should hop back to our `list` template and wire everything up for displaying items. Again, we want to make sure that everything is in place so that when we add our template for adding new items, they just show up. Let's wire up the two helpers inside of our `Template.subscriptionsReady` block next: `hasItems` and `items`.
+
+<p class="block-header">/client/templates/public/list.js</p>
+
+```javascript
+[...]
+
+Template.list.helpers({
+  hasItems() {
+    return ListItems.find( {} ).count() > 0;
+  },
+  items() {
+    let items = ListItems.find( {}, { sort: { order: 1 } } );
+    if ( items ) {
+      return items;
+    }
+  }
+});
+```
+Simple, but important. Our first helper, `hasItems`, is the one wrapping our `{{#each items}}` block and controls the display of our items. If this returns `false`, we want to display a message to our user instructing them to add some new items. Here, we keep it super simple. Inside, we make a call to `ListItems.find( {} ).count()` which let's us know how many items are in the _client-side_ (minimongo) `ListItems` collection. We test to see if this number is greater than zero `> 0`. By returning this directly, we get either a  `true` or `false` response, toggling our template accordingly.
+
+The big stuff is down below in the `items` helper. Albeit simple, this helper is responsible for actually _displaying_ the items in our list. Here, we make a call to `ListItems.find( {} )` (again, this is the client-side data store we're looking at so no need to pass the `listId`), sorting the list by the `order` field on each item. This is pretty insignificant now, but later, we'll enable drag-and-drop support to our list which will allow our wisher to reorder the items in their list. We'll be tracking that order using the `order` field, so it's good to account for that now with this sort.
+
+From here, if we have items: we display them. Back in our template we're just spitting this data out using an `{{#each items}}` block. Inside of that block, we make a call to `{{> listItem}}`. That template is pretty much what you'd expect, but let's take a peek so it's clear.
+
+<p class="block-header">/client/templates/public/list-item.html</p>
+
+```markup
+<template name="listItem">
+  <li data-id="{{_id}}" class="list-group-item {{#if url}}has-link{{/if}}">
+    {{#if url}}
+      <p>
+        <a href="{{url}}" target="_blank">{{order}}. {{name}}</a>
+      </p>
+    {{else}}
+      <p>{{order}}. {{name}}</p>
+    {{/if}}
+    <i class="fa fa-remove"></i>
+  </li>
+</template>
+```
+
+See! Easy. A few things to point out. First, notice that we're setting a `data-id` attribute on each of the list item's we're outputting. Why? Well, when we dig into the drag-and-drop stuff later, this will make it easy to handle reset the order of items in the list. Just note it's existence for now, we'll review how it works later. Another thing to note is that we technically have two styles of list items: with and without a link. 
+
+Because adding a link is optional (a wisher can add a plain item), we account for this here. If an item has a link, we wrap it's name in an `<a></a>` tag pointing to the passed URL. If not, we just return the `{{name}}` value. Notice that both styles have `{{order}}.` included. This will display the current order of the item in the list as it's stored in the database. 
+
+At this point, we have everything we need to see items in our list. Next, let's wire up the ability to add a new list item to complete the circle.
 
 ### Adding items to lists
+Phew! We're at about the halfway point, but we've already covered a lot. Aside from creating lists, we haven't really done much in respect to interaction. This is okay! What we _have_ accomplished is making it so that when we _do_ wire up the interaction—this is our task in this section—we don't have to worry about data output. It's already done!
+
+To get things cracking, let's update our `list` template real quick to include our `addList` template and then see how the latter is built out.
+
 ### Sorting lists with drag and drop
 ### Removing items from lists
 ### Emailing lists
