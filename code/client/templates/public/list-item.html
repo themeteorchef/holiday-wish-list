@@ -1,0 +1,12 @@
+<template name="listItem">
+  <li data-id="{{_id}}" class="list-group-item {{#if url}}has-link{{/if}}">
+    {{#if url}}
+      <p>
+        <a href="{{url}}" target="_blank">{{order}}. {{name}}</a>
+      </p>
+    {{else}}
+      <p>{{order}}. {{name}}</p>
+    {{/if}}
+    <i class="fa fa-remove"></i>
+  </li>
+</template>

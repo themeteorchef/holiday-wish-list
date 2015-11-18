@@ -19,6 +19,7 @@ let _getItems = () => {
 };
 
 let _setDragDrop = ( element ) => {
+  $( element ).sortable( 'destroy' );
   $( element ).sortable( { forcePlaceholderSize: true } );
 };
 

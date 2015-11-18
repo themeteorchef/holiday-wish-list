@@ -1,10 +1,8 @@
 Meteor.publish( 'list', function( listId ) {
   check( listId, String );
 
-  let list = Lists.find( { _id: listId } );
-
   return [
-    list,
+    Lists.find( { _id: listId } ),
     ListItems.find( { listId: listId } )
   ];
 });

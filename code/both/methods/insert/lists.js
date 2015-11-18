@@ -3,7 +3,7 @@ Meteor.methods({
     check( listName, String );
 
     try {
-      var listId = Lists.insert( { name: listName, sent: false } );
+      let listId = Lists.insert( { name: listName, sent: false } );
       return listId;
     } catch( exception ) {
       return exception;
