@@ -5,7 +5,7 @@ In this recipe, we're going to help Santa Claus build an app to help kids around
 
 [Read on The Meteor Chef](http://themeteorchef.com/recipes/holiday-wish-list)  
 
-[Demo the Recipe](http://tmc-016-demo.meteor.com)  
+[Demo the Recipe](http://dearsantalist.com)  
 
 [Download the Source](https://github.com/themeteorchef/holiday-wish-list/archive/master.zip)
 
