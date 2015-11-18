@@ -430,6 +430,165 @@ Phew! We're at about the halfway point, but we've already covered a lot. Aside f
 
 To get things cracking, let's update our `list` template real quick to include our `addList` template and then see how the latter is built out.
 
-### Sorting lists with drag and drop
+<p class="block-header">/client/templates/public/list.html</p>
+
+```markup
+<template name="list">
+  <div class="santa-pod santa-list">
+    <div class="sp-content">
+      [...]
+
+      {{#if Template.subscriptionsReady}}
+        [...]
+      {{else}}
+        <p>Loading your list...</p>
+      {{/if}}
+
+      {{> addListItem}}
+      
+      [...]
+    </div>
+  </div>
+</template>
+```
+
+See it? Just beneath our `Template.subscriptionsReady` block. Now that it's in place, let's see what it looks like.
+
+<p class="block-header">/client/templates/public/add-list-item.html</p>
+
+```markup
+<template name="addListItem">
+  <form id="add-item" class="add-list-item">
+    <h4>Add an item</h4>
+    <div class="form-group">
+      <label for="itemName">Item Name (required)</label>
+      <input type="text" class="form-control" name="itemName" placeholder="Minecraft Lego Set">
+    </div>
+    <label for="itemUrl">Item URL</label>
+    <input type="text" class="form-control" name="itemUrl" placeholder="https://amazon.com...">
+    <p class="text-muted input-helper-text">Santa likes to shop online, too, you know!</p>
+    <input type="submit" class="btn btn-success btn-block" value="Add This to My List!">
+  </form>
+</template>
+```
+
+Phew! Nothing too wild. Just two inputs and a button. Because this is mostly for kids—wishers are pretty young—we want to keep this plum simple, so we only ask two questions with the latter being optional: "what's an item that you'd like on your list?" and "what's a url for that item?" That's it. This keeps it simple for the kids, Santa, and ultimately ourselves. To prove that point, let's look at the logic backing this template.
+
+<p class="block-header">/client/templates/public/add-list-item.js</p>
+
+```javascript
+Template.addListItem.onRendered( () => {
+  Modules.client.addItem({
+    template: Template.instance(),
+    form: '#add-item'
+  });
+});
+
+Template.addListItem.events({
+  'submit form' ( event, template ) { event.preventDefault(); }
+});
+```
+Clever! Yet again, we rely on our dear friend the module to simplify this down. As you can see, we're going to create a new module `addItem` which will work fairly similar to our `addList` module we defined earlier. Let's hop over there now and take a look.
+
+<p class="block-header">/client/modules/add-list-item.js</p>
+
+```javascript
+let template,
+    form;
+
+let add = ( options ) => {
+  template = options.template;
+  form     = options.form;
+
+  _validate( form );
+};
+
+let _validate = ( form ) => {
+  $( form ).validate( validation() );
+};
+
+let validation = () => {
+  return {
+    rules: {
+      itemName: {
+        required: true
+      },
+      itemUrl: {
+        url: true
+      }
+    },
+    messages: {
+      itemName: {
+        required: "Whoops! Need a name for this item."
+      },
+      itemUrl: {
+        url: "Is this correct? Don't forget the http:// part!"
+      }
+    },
+    submitHandler() { _handleAdd(); }
+  };
+};
+
+let _handleAdd = () => {
+  let item = {
+    listId: FlowRouter.current().params._id,
+    name: template.find( '[name="itemName"]' ).value,
+    url: template.find( '[name="itemUrl"]' ).value
+  };
+
+  Meteor.call( 'addItemToList', item, ( error ) => {
+    if ( error ) {
+      Bert.alert( error.reason, 'warning' );
+    } else {
+      Bert.alert( 'Item added! Cross your fingers :)', 'success' );
+      $( form ).get(0).reset();
+    }
+  });
+};
+
+Modules.client.addItem = add;
+```
+
+Looking familiar? Everything here—up to the `_handleAdd()` method—is identical to our `addList` module. We're applying the exact same validation pattern here, calling a final method when our form's validation is given the greenlight. To keep us moving along, let's narrow our focus down to that `_handleAdd()` method as that's where the real action happens. If this module thing is making your head spin, don't be afraid to take a break and [read this snippet on it](https://themeteorchef.com/snippets/using-the-module-pattern-with-meteor/) to get a better understanding.
+
+Inside of our `_handleAdd()` method we see a lot of familiar things going on. First, we setup a new object `item` to pass over to the server. Inside, we grab the current `listId` from the router again, along with the value of the fields from our `addListItem` template: `itemName` and `itemUrl`. With these in tow, we make a call to `addItemToList`, passing our `item` object up to the server. Before we go there, make note of our success callback. If our item is successfully added, we clear out the form and display an alert message to our wisher. This doubly confirms that their item was added. Triple if you accont for the item popping up in the list above. Sweet!
+
+As you might have guessed, adding items on the server is very similar to what we did for adding lists. Let's take a peek now.
+
+<p class="block-header">/both/methods/insert/list-items.js</p>
+
+```javascript
+Meteor.methods({
+  addItemToList( listItem ) {
+    check( listItem, {
+      listId: String,
+      name: String,
+      url: Match.Optional( String )
+    });
+
+    let existingItems = ListItems.find( { listId: listItem.listId } ).count();
+
+    listItem.order = existingItems + 1;
+
+    try {
+      var itemId = ListItems.insert( listItem );
+      return itemId;
+    } catch( exception ) {
+      return exception;
+    }
+  }
+});
+```
+Yep! Pretty much the same, save for a few things. First, we get our `check()` work out of the way, confirming that the object we're receiving has the fields and types we expect. Notice that here, we're using the `Match.Optional()` method to suggest that the `url` field may or may not be set. If it is, we want to validate it as a `String` type.
+
+Next up is something to pay attention to. Here, we quickly grab the count of the existing list items on the current list. Once we have it, we promptly make use of it on the next line, setting a new field on our `listItem` object passed from the client: `order`. Notice that we set the value of this equal to `existingItems` (the count of items on this list already) plus one. Huh?
+
+Because we'll be using drag-and-drop in a bit, we want to prevent messing up any existing ordering. To do that, we simply say that all new items should be appended to the bottom of the list. This means that item will need to receive an order value placing it in the last spot. In this case, that means the current length of the list _plus one more item_. Pretty freaking clever, eh? We are _so_ badass.
+
+Once we have this set, we just toss our `listItem` object straight into our call to `ListItems.insert()`. If all goes as planned, our list item will be inserted into the database! [Gnarly](https://youtu.be/hJdF8DJ70Dc?t=5s). Okay, so, we have items on our list, so it's time to dig into the trickiest part—though not too difficult—part of the recipe: sorting items with drag-and-drop.
+
+### Sorting lists with drag-and-drop
+
+
 ### Removing items from lists
 ### Emailing lists
