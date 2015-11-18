@@ -282,9 +282,34 @@ Notice that here, we have a method called `submitHandle()` calling _another_ met
 
 The important part in all of this is the success callback of this call to `createWishList`. Notice that we have the line `localStorage.setItem( 'themeteorchef_dear_santa_list_id', listId );`. Can you guess what this is doing? Expecting that the new list's `_id` will be returned as the `listId` argument to our method call, we take this value and _set_ it on our `localStorage` using the `localStorage.setItem()` method. Notice that we're using the exact same name for this item as we did in our startup module a little bit ago. Here, once a list exists, we set it on the wisher's browser, preventing them from creating another one later, but also automating their access to the list they jut created.
 
-Using a similar technique to our starutp method, we also make a call to `FlowRouter.go( `/lists/${listId}` );`, redirecting the user to their list once it's created. Sweet! With this in place, we can hop up to the server to define that `createWishList` method. It's a simple one, so this will go quick.
+Using a similar technique to our starutp method, we also make a call to `FlowRouter.go( '/lists/${listId}' );`, redirecting the user to their list once it's created. Sweet! With this in place, we can hop up to the server to define that `createWishList` method. It's a simple one, so this will go quick.
 
+#### Inserting lists into the database
+<p class="block-header">/both/methods/insert/lists.js</p>
 
+```javascript
+Meteor.methods({
+  createWishList( listName ) {
+    check( listName, String );
+
+    try {
+      let listId = Lists.insert( { name: listName, sent: false } );
+      return listId;
+    } catch( exception ) {
+      return exception;
+    }
+  }
+});
+```
+Told you so! Very straightforward. First, we take in our `listName` argument passed over from the client and [using the check package](), validate that it's a `String`. If it is, inside of a `try/catch` we attempt to perform an insert into our `Lists` collection. Notice that we're defining an object with two properties being set `name` (equal to the `listName` value from the client) and `sent` equal to `false`. That second property, `sent`, is being set manually here to comply with the schema rules we set up earlier. Having this here, we ensure that our insert doesn't get blocked.
+
+Notice that when we perform the insert, we do it without a callback and assign the insert to a variable `listId`. Huh? This is a fun trick. Without a callback, Meteor will just return either the error or `_id` of the new list, so we just return it from our method directly. Of course, we're taking a leap of faith here and assuming that the insert will function without error. To foolproof this, we'd want to update our success callback for this method on the client to check `listId` for an `error` property. We're not too concerned, now, though, so we'll leave it off.
+
+With this in place, we're creating lists! Because we're redirecting to our list already, we can head over that way now. This is where we'll display our wisher's list along with a form for adding new items _to_ that list.
+
+### Setting up our list template
+
+#### Adding a publication to our template
 
 ### Adding items to lists
 ### Sorting lists with drag and drop
