@@ -679,7 +679,33 @@ Looking at the `_setDragDrop()` method, we see two things happening. First, we d
 
 Inside of `_setChangeEvent()` we do just that! Here, we take the same approach as the `_setDragDrop()` method, unbinding any existing `sortupdate` events from our list and then reapply it. This may be a bit confusing. What we're doing here is registering an event to watch for _later_. More specifically, the `sortupdate` event will fire whenever our user makes a change to the order of their list. When they do, we want to update the order of the items in that list in the database (read: updating each item's `order` property in the database).
 
-To do _that_, we have one last method being defined: `updateListItemOrder`. 
+To do _that_, we have one last method being defined: `updateListItemOrder`. This is the coolest method here. What we're doing inside is take the `items` argument—remember, this is equal to our `.sortable li` selector—and iterating over each of the matching items using jQuery's [each](http://api.jquery.com/jquery.each/) method. For each item found, we create an object called `item` containing two properties: `_id` and `order`. Remember earlier when we set `data-id` on each of our `<li></li>` elements in the `{{> listItem}}` template? This is where we make use of it.
+
+Using this, we can grab the `_id` of the element we need to update. In the `order` field, we simply take the `index` value from the `.each()` loop and add one to it. Why one? Because technically the index starts at `0`. To avoid confusion, adding `1` means that items in our list will always start at `1` and increment from there. Cool! Notice that once our object is built, we make a call to a new method `updateListItemOrder`, passing our `item` object.
+
+I bet you can guess what's happening in that method, but let's take a look real quick to close this loop.
+
+<p class="block-header">/both/methods/update/list-items.js</p>
+
+```javascript
+Meteor.methods({
+  updateListItemOrder( item ) {
+    check( item, { _id: String, order: Number } );
+
+    try {
+      ListItems.update( item._id, { $set: { 'order': item.order } } );
+    } catch( exception ) {
+      return exception;
+    }
+  }
+});
+```
+
+Yes! Exactly what we thought. We simply take the `item` object we're passing from the client, `check()` it, and update the corresponding list item in the database (using the `item._id` property to select the correct item in the database). Do you see what's happening here? Whenever we drag an item to a new location in our list, once it's dropped, we immediately grab the position of each element in the list and set _that_ as the `order` value on the item in the database. _So freaking cool_. This ensures that no matter where we drag out items, we'll correctly preserve their order state. If we drag an item somewhere in our list now and then refresh the page, that order will stick!
+
+<img style="width: 100%; max-width: 350px;" src="https://tmc-post-content.s3.amazonaws.com/shiamagic.gif">
+
+At this point we're turning some elf heads! Santa just saw the demo and let out a "ho, ho, ho!" We're almost done, just two more tasks: making it possible to remove items from our list and emailing our list to a parent or gaurdian.
 
 ### Removing items from lists
 ### Emailing lists
