@@ -1036,4 +1036,13 @@ To do that, we'll rely on the [meteorhacks:ssr](https://atmospherejs.com/meteorh
 
 Once we have this template compiled, we need to _render_ it, using the `SSR.render()` method. This also takes two arguments: the name of the template that we specified in the last step along with the data we want to use to fill in those helper tags we talked about. Notice, the names of the properties in this object map directly to the names of the helpers in the template. So, when we call `{{wisher}}` inside of the template, that gets replaced with the name of the wisher, or, `list.name`. Cool!
 
-With this rendered, we return it. Back in our `_prepareAndsendList()` method, we take this result and pass it to a call to `Email.send()`. We get this from the `email` package we installed at the beginning of the recipe.
+With this rendered, we return it. Back in our `_prepareAndsendList()` method, we take this result and pass it to a call to `Email.send()`. We get this from the `email` package we installed at the beginning of the recipe. The properties passed here are pretty straightforward. The one to pay attention to is the `html` property. Notice that we're assigning it to the HTML we just got back from the `_buildHtmlEmail()` method. Awesome. With this in place our email is ready to send!
+
+<div class="note">
+  <h3>Configuring Email <i class="fa fa-warning"></i></h3>
+  <p>In order for this to work, you will need to <a href="https://themeteorchef.com/snippets/using-the-email-package/#tmc-configuration">configure an SMTP provider</a> in your application. Without one, Meteor will simply output the message for your email to the server console.</p>
+</div>
+
+Just one last thing to point out in here. See that very last method in our file `_markListAsSent()`? This is important. If we look back up in our `send` method, we can see this being called after `_prepareAndSendList()`. What this is doing is toggling the `sent` field on the passed `listId` to be `true`. What does that accomplish? Well, this let's us know—or rather, confirms—that our wisher's list has been sent. Remember, Santa wants to avoid double sends at all costs. We've _mostly_ solved this, but we can go one step further. With this module complete, let's head back to the client and make one last change to our `list` template.
+
+### Adding a send confirmation
