@@ -838,4 +838,202 @@ Template.list.events({
 });
 ```
 
-Just a few changes here. First, our toggling functionality will be relying on a reactive variable via the [reactive-var](https://atmospherejs.com/meteor/reactive-var) package.
+Just a few changes here. First, our toggling functionality will be relying on a reactive variable via the [reactive-var](https://atmospherejs.com/meteor/reactive-var) package. We start by creating the variable itself, assigning it to our template instance as `sending` in our `onCreated` callback. Because we _do not_ want the `{{> sendList}}` template to show by default when our app loads, we set this to `false`.
+
+Next, inside of our helpers, we add a new helper `sending` which simply returns the current state of our reactive variable. To get access ot it, we call `Template.instance().sending` and invoke its `.get()` method. Now, whenever we change the reactive var tied to the `sending` property on our template instance, it will update this helper. Remember, we have a block called `{{#unless sending}}`. This means that when we change our reactive var, we're changing the behavior of that block (read: revealing the `{{> sendList}}` template). Neat!
+
+But wait...how do we actually _change_ this? Good question. If we pop down to the event handlers block above, we can see that we've added a new event `click .send-to-santa`. See what it's doing? This simply toggles the state of `sending` to true, meaning, "yes, reveal the `{{> sendList}}` template." Cool! With this in place, we're finally ready to add that template. Don't worry, we'll update this logic soon to also include a "cancel" send button so our wishers have a way back if they change their mind.
+
+#### Adding the `sendList` template
+Okay! So at this point, we have our toggling all wired up and we just need a template to handle the sending. Good news: it's really simple.
+
+<p class="block-header">/client/templates/public/send-list.html</p>
+
+```markup
+<template name="sendList">
+  <div class="send-list">
+    <h3>Send your list to Santa</h3>
+    <p>This is it! Make super, duper, absolutely sure that your list is ready to go to Santa Claus. Because Santa is top secret, <span>you will need to send this to a parent or guardian as they have Santa's email address</span> and will send it to him directly.</p>
+    <form id="send-list">
+      <label for="emailAddress">Parent or Guardian Email Address</label>
+      <input type="email" class="form-control" name="emailAddress" placeholder="Parent or Gaurdian Email Address">
+      <div class="send-buttons">
+        <button type="submit" class="btn btn-success">Ok, send it!</button>
+        <button class="btn btn-default cancel-send">No, wait!</button>
+      </div>
+    </form>
+  </div>
+</template>
+```
+Just a single field! Remember, we want to keep this simple for wishers. We'll wire up this form next, but real quick, look at those two buttons near the bototm of the template. See the one with the class `cancel-send`? This is our "abort" button that will toggle our list view back to its original state. Let's wire that up before we handle the send.
+
+<p class="block-header">/client/templates/public/list.html</p>
+
+```javascript
+Template.list.events({
+  'click .send-to-santa' ( event, template ) {
+    template.sending.set( true );
+  },
+  'click .cancel-send' ( event, template ) {
+    template.sending.set( false );
+  },
+  [...]
+});
+```
+Easy peasy! We just add our `click` event for the `.cancel-send` class and inside, perform the inverse of what happens when we click the `.send-to-santa` button. Awesome. Now wishers can move back and forth between the `{{> sendList}}` template without concern. With this in place, now we need to handle our `sendList` template. Let's take a look at some logic for that template now. This is a bigger process, so I bet you can guess what's next!
+
+<p class="block-header">/client/templates/public/send-list.js</p>
+
+```javascript
+Template.sendList.onRendered( () => {
+  Modules.client.sendList({
+    template: Template.instance(),
+    form: '#send-list'
+  });
+});
+
+Template.sendList.events({
+  'submit form' ( event ) { event.preventDefault(); }
+});
+```
+
+Ah, ha! A module. Yep :) Our goal is to keep this process as neat and tidy as possible and this will help us out immensely in that effort. The pattern here should look pretty familiar at this point. We're just calling up our `sendList` module when the template renders. The rest is happening over in the module, so let's take a peek at that now.
+
+<p class="block-header">/client/modules/send-list.js</p>
+
+```javascript
+let template;
+
+let send = ( options ) => {
+  template = options.template;
+  _validate( options.form );
+};
+
+let _validate = ( form ) => {
+  $( form ).validate( validation() );
+};
+
+let validation = () => {
+  return {
+    rules: {
+      emailAddress: {
+        required: true,
+        email: true
+      }
+    },
+    messages: {
+      emailAddress: {
+        required: 'Need an email address here, please!',
+        email: 'Is this a real email address? Double check!'
+      }
+    },
+    submitHandler() { _handleSend(); }
+  };
+};
+
+let _handleSend = () => {
+  let list = {
+    recipient: template.find( '[name="emailAddress"]' ).value,
+    listId: FlowRouter.current().params._id
+  };
+
+  Meteor.call( 'sendListToSanta', list, ( error ) => {
+    if ( error ) {
+      Bert.alert( error.reason, 'warning' );
+    } else {
+      Bert.alert( 'List sent! Happy holidays and good luck :)', 'success' );
+    }
+  });
+};
+
+Modules.client.sendList = send;
+```
+
+Three cheers for patterns! Patterns! Patterns! Patterns! This should look _super_ familiar. Remember our modules from earlier? We're just reprising their functionality here. First, we start off by validating our form, with our real work taking place in the `_handleSend()` method. There, we snatch up two things: the value of the `emailAddress` field from the template and the current `listId` from the route. Why the `listId`? As we'll see soon, we'll use this to grab all of the items on our list to send as a part of our email.
+
+We're ready to do that now. Up to the server to build out this `sendListToSanta` method!
+
+<p class="block-header">/both/methods/utility/lists.js</p>
+
+```javascript
+Meteor.methods({
+  sendListToSanta( list ) {
+    check( list, {
+      recipient: String,
+      listId: String
+    });
+
+    try {
+      return Modules.server.sendList( list );
+    } catch ( exception ) {
+      return exception;
+    }
+  }
+});
+```
+
+Womp! Of course. Again, this simplicity is a good thing. Here, we're just checking the object we passed over from the client along with its types. Once it gets the tumbs up, we take that object and pass it to _another_ module `sendList` here on the server. This is the last "big" chunk of work we'll need to do and our work is about done. Same as before, let's dump out the entire module and then step through it.
+
+<p class="block-header">/server/modules/send-list.js</p>
+
+```javascript
+let send = ( options ) => {
+  let list  = _getList( options.listId ),
+      items = _getItems( options.listId );
+
+  if ( list && items ) {
+    _prepareAndSendList( options.recipient, list, items );
+    _markListAsSent( options.listId );
+  } else {
+    throw new Meteor.Error( 'not-found', 'Sorry, we couldn\'t find that list! Try again?' );
+  }
+};
+
+let _getList = ( listId ) => {
+  let list = Lists.findOne( { _id: listId } );
+  if ( list ) {
+    return list;
+  }
+};
+
+let _getItems = ( listId ) => {
+  let items = ListItems.find( { listId: listId }, { sort: { order: 1 } } ).fetch();
+  if ( items ) {
+    return items;
+  }
+};
+
+let _prepareAndSendList = ( recipient, list, items ) => {
+  let html = _buildHtmlEmail( list, items );
+
+  Email.send({
+    to: recipient,
+    from: 'Dear Santa <dearsantalist@themeteorchef.com>',
+    subject: `[Dear Santa] ${list.name} sent you a wish list!`,
+    html: html
+  });
+};
+
+let _buildHtmlEmail = ( list, items ) => {
+  SSR.compileTemplate( 'santaEmail', Assets.getText( 'email/templates/send-to-santa.html' ) );
+  return SSR.render( 'santaEmail', { wisher: list.name, items: items } );
+};
+
+let _markListAsSent = ( listId ) => {
+  return Lists.update( { _id: listId }, { $set: { sent: true } } );
+};
+
+Modules.server.sendList = send;
+```
+
+Well, ok then. Pay close attention, don't panic. This follows the exact same pattern as other modules that we wrote earlier. Each step is broken up into an individual function. All we need to pay attention to is what's being called and when. Let's talk about how this is working!
+
+First things first, we need to retrieve the list and items _for_ that list before we send anything. To do this, we rely on two methods: `_getList()` and `_getItems()`. Notice that for both, we pass the `listId` from the arguments object we sent over from our method. Once we call these, we check if they've returned something. If they _haven't_, we throw an error. If they _have_, we call `_prepareAndSendList()`, passing three things: the email address of the recipient, the list itself, and the items _for_ that list.
+
+Inside of `_prepareAndSendList()` we do two things: build an HTML email to send out (passing our `list` and `items` arguments) and then _send_ that email. That first step, calling `_buildHtmlEmail()` is all about populating and compiling [an HTML email template that we've set up](https://github.com/themeteorchef/holiday-wish-list/blob/master/code/private/email/templates/send-to-santa.html) for sending lists to parents and guardians. That template contains some helper tags like `{{wisher}}` and `{{#each items}}` that we want to swap with real data.
+
+To do that, we'll rely on the [meteorhacks:ssr](https://atmospherejs.com/meteorhacks/ssr) package. Inside of the `_buildHtmlEmail()` method, we first call `SSR.compileTemplate()` passing a name for our template and then the HTML for the template we want to compile. To get that HTML, notice that we're using Meteor's `Assets.getText()` method which gets the text contents of the file specified in the path. Note: this path is relative to the `/private` directory in our application, so, the actual path we're pointing to is `/private/email/templates/send-to-santa.html`. So far, so good?
+
+Once we have this template compiled, we need to _render_ it, using the `SSR.render()` method. This also takes two arguments: the name of the template that we specified in the last step along with the data we want to use to fill in those helper tags we talked about. Notice, the names of the properties in this object map directly to the names of the helpers in the template. So, when we call `{{wisher}}` inside of the template, that gets replaced with the name of the wisher, or, `list.name`. Cool!
+
+With this rendered, we return it. Back in our `_prepareAndsendList()` method, we take this result and pass it to a call to `Email.send()`. We get this from the `email` package we installed at the beginning of the recipe.
