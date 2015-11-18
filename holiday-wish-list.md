@@ -808,3 +808,34 @@ To get things underway, we need to start by updating our list template to toggle
 See what's changing here? First, all of our existing content has been nested within a new block `{{#unless sending}}`. What does this do? This is saying "unless the `sending` helper is returning `true`, show our list and add list item form." If the `sending` helper _is_ returning `true`, however, we want to  show our new `{{> sendList}}` template. To get access to that view, though, we need a way to toggle the state of that `sending` helper. How do we do it?
 
 Notice that we've also added something just inside the `{{#unless sending}}` block. See that `{{#if hasItems}}` block? This is wrapping a button that will display when the list has one or more items. This is the button we'll use to toggle between our list and add list item form and our soon-to-be `{{> sendList}}` template. Before we set up that template, let's add some logic to our `list` template to help us handle the toggling between states.
+
+<p class="block-header">/client/templates/public/list.js</p>
+
+```javascript
+Template.list.onCreated( () => {
+  let template = Template.instance();
+  template.subscribe( 'list', FlowRouter.current().params._id );
+  template.sending = new ReactiveVar( false );
+});
+
+[...]
+
+Template.list.helpers({
+  sending() {
+    return Template.instance().sending.get();
+  },
+  hasItems() {
+    return ListItems.find( {} ).count() > 0;
+  },
+  [...]
+});
+
+Template.list.events({
+  'click .send-to-santa' ( event, template ) {
+    template.sending.set( true );
+  },
+  [...]
+});
+```
+
+Just a few changes here. First, our toggling functionality will be relying on a reactive variable via the [reactive-var](https://atmospherejs.com/meteor/reactive-var) package.
