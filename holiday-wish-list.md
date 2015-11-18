@@ -588,7 +588,98 @@ Because we'll be using drag-and-drop in a bit, we want to prevent messing up any
 Once we have this set, we just toss our `listItem` object straight into our call to `ListItems.insert()`. If all goes as planned, our list item will be inserted into the database! [Gnarly](https://youtu.be/hJdF8DJ70Dc?t=5s). Okay, so, we have items on our list, so it's time to dig into the trickiest part—though not too difficult—part of the recipe: sorting items with drag-and-drop.
 
 ### Sorting lists with drag-and-drop
+To kick off our drag-and-drop journey, the first thing we'll want to do is set up our starting point. Because our draggble list will existing within our `list` template, let's update that template's logic now. We'll be using a module for this, so all we need to do is add a call to that module in the `list` template's `onRendered` callback.
 
+<p class="block-header">/client/templates/public/list.js</p>
+
+```javascript
+[...]
+
+Template.list.onRendered( () => {
+  Modules.client.dragDrop.init({
+    sortableElement: '.sortable',
+    sortableItems: '.sortable li'
+  });
+});
+
+[...]
+```
+
+Making sense? Pay close attention. Instead of calling our `dragDrop` module directly, here, we're actually making a call to a method that we'll expose called `init`. Don't worry about the details now, but the gist of this idea is that we'll have another method we'll need to expose later, so we account for this now. For arguments, we pass to things `sortableElement`, referring to the class name of the sortable _list_ element, and `sortableItems`, referring to the items in our list that can be sorted. Again, patience, this will all make sense soon. Let's hop over to our module definition and see how it's coming together.
+
+<p class="block-header">/client/modules/drag-drop.js</p>
+
+```javascript
+let dragDrop = ( options ) => {
+  _initDragDrop( options.sortableElement, options.sortableItems );
+};
+
+let _initDragDrop = ( element, items ) => {
+  if ( _getItems() ) {
+    setTimeout( () => {
+      _setDragDrop( element );
+      _setChangeEvent( element, items );
+    }, 300 );
+  }
+};
+
+let _getItems = () => {
+  let items = ListItems.find().fetch();
+  if ( items ) {
+    return items;
+  }
+};
+
+let _setDragDrop = ( element ) => {
+  $( element ).sortable( 'destroy' );
+  $( element ).sortable( { forcePlaceholderSize: true } );
+};
+
+let _setChangeEvent = ( element, items ) => {
+  $( element ).sortable().off( 'sortupdate' );
+
+  $( element ).sortable().on( 'sortupdate', function() {
+    updateListItemOrder( items );
+  });
+};
+
+let updateListItemOrder = ( items ) => {
+  $( items ).each( ( index, element ) => {
+    let item = { _id: $( element ).data( 'id' ), order: index + 1 };
+
+    Meteor.call( 'updateListItemOrder', item, ( error ) => {
+      if ( error ) {
+        Bert.alert( error.reason, 'warning' );
+      }
+    });
+  });
+};
+
+Modules.client.dragDrop = {
+  init: dragDrop,
+  setIndexes: updateListItemOrder
+};
+```
+
+What in the _blue blazes_? Deep breaths. This looks like a lot, but it's pretty straightforward. The first thing to call out is at the very bottom. Notice that instead of turning a single method here, we're setting our module namespace equal to an _object_. What this achieves is what we just saw back in our `list` template's logic. By returning an object, we can expose multiple methods within this file. As we can see here, we're trying to expose our `dragDrop` method and our `updateListItemOrder` method separately.
+
+It may seem a bit foreign, but if we call `Modules.client.dragDrop.setIndexes()`, we're technically calling `Modules.client.dragDrop.updateListItemOrder()`. The name changes here are just to keep our methods a bit shorter. Pay attention to the mapping here and how our arguments are passing through. See it? This is _really_, really useful when a module contains more than one method that you can benefit from using publicly.
+
+Inside of our module we have a few things going on. We're trying to solve three problems in here:
+
+1. Initializing drag and drop on our list _after_ our data has loaded on the client.
+2. Initializing an _event handler_ on our list to identify when a wisher has updated the order of their list (i.e. they've dragged and dropped an item elsewhere).
+3. Updating the index of the items in the list within the database (i.e. setting the `order` property of each item in our list). 
+
+To solve the first problem, take a peek at our `_initDragDrop()` method. Inside, it looks a bit funky. First, we call an `if` statement that's evaulating based on the result of a call to `_getItems()`. The goal here is to  determine whether or not the current list has any items. Remember, our publication is ensuring that we only have access to the current user's list's items, so we can just call `ListItems.find()` directly. If we _do_ have items, we return them as an array.
+
+Back in our `_initDragDrop()` method, if we have items, we create a `setTimeout()` block set to `300ms`, firing two methods inside: `_setDragDrop()` taking the `sortableElement` property we passed in earlier as an argument, and `setChangeEvent()`, taking in both the `sortableElement` and `sortableItems` arguments we passed in earlier.
+
+Looking at the `_setDragDrop()` method, we see two things happening. First, we destroy any existing instance of `sortable()` on the passed element (our sortable list) and then we re-init sortable on that element. Why? This prevents us from accidentally binding sortable to our list an infinite number of times. Remember, this is technically being called within our template's `onRender` method so we want to prevent any re-rendering from over-binding sortable instances. An edge case, but a potential performance hole. This protects us.
+
+Inside of `_setChangeEvent()` we do just that! Here, we take the same approach as the `_setDragDrop()` method, unbinding any existing `sortupdate` events from our list and then reapply it. This may be a bit confusing. What we're doing here is registering an event to watch for _later_. More specifically, the `sortupdate` event will fire whenever our user makes a change to the order of their list. When they do, we want to update the order of the items in that list in the database (read: updating each item's `order` property in the database).
+
+To do _that_, we have one last method being defined: `updateListItemOrder`. 
 
 ### Removing items from lists
 ### Emailing lists
