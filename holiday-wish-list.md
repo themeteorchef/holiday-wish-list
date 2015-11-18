@@ -308,6 +308,72 @@ Notice that when we perform the insert, we do it without a callback and assign t
 With this in place, we're creating lists! Because we're redirecting to our list already, we can head over that way now. This is where we'll display our wisher's list along with a form for adding new items _to_ that list.
 
 ### Setting up our list template
+The bulk of our work will take place around our `list` template that we'll set up now. The template itself is made up of a number of child templates. To keep things simple, we'll be adding each child template as we move forward. Let's take a peek at the basic version and then work up from there.
+
+<p class="block-header">/client/templates/public/list.html</p>
+
+```markup
+<template name="list">
+  <div class="santa-pod santa-list">
+    <div class="sp-content">
+      <div class="santa"></div>
+      
+      <h3>Dear Santa,</h3>
+      <p>For the holidays, I would really like it if you could send me...</p>
+
+      {{#if Template.subscriptionsReady}}
+        {{#if hasItems}}
+          <ul class="list-group sortable">
+            {{#each items}}
+              {{> listItem}}
+            {{/each}}
+          </ul>
+          <p class="text-muted hint"><i class="fa fa-lightbulb-o"></i> <strong>Wish tip</strong>: drag and drop items in your list to make sure Santa Claus knows which items are most important!</p>
+        {{else}}
+          <p class="alert alert-warning">No items yet! Add some using the boxes below so Santa Claus knows what you want :)</p>
+        {{/if}}
+      {{else}}
+        <p>Loading your list...</p>
+      {{/if}}
+
+      <div class="presented-by">
+        <span>A gift from</span>
+        <a href="https://themeteorchef.com"><img src="/images/tmc-logo.png" alt="The Meteor Chef"></a>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+Don't panic! This may seem like a lot but the bulk of it is just logic that will help us to offer up a better user experience. The part we want to pay attention to right now is the block wrapped by `{{#if Template.subscriptionsReady}}`. What we want to do is get our list _output_ squared away first. With this in place, then, we'll immediately be able to see list items getting added to the app. Cool?
+
+Okay. So this `Template.subscriptionsReady` business. What's that? This is a helper that we get from Meteor which returns `true` if all of the subscriptions for our template have fired their `ready()` callbacks. This means that all of our subscriptions have successfully connected to our publications on the server. To make this work, though, we need to actually have subscriptions to be _ready_. We only need one, so let's wire it up quick.
+
+<p class="block-header">/client/templates/public/list.js</p>
+
+```javascript
+Template.list.onCreated( () => {
+  let template = Template.instance();
+  template.subscribe( 'list', FlowRouter.current().params._id );
+});
+```
+
+Easy peasy! Inside of our `list` template's `onCreated` method, we simply create a call to `template.subscribe` (short-handing this by storing `Template.instance()` in a variable), passing `list` as the name of the publication we'll subscribe to. The interesting part here is what we're passing in the second argument `FlowRouter.current().params._id`. Rember that when we create a new list, we're redirecting our user to `/lists/:_id`. Here, we're grabbing whatever value is currently set in the `:_id` part. Why are we passing this to our subscription? 
+
+This will make it possible to only subscribe to the list—and list items—matching that `_id`. This is both a perfomrnace and security technique. Performance, because it will prevent us from sending every list in the database down the wire, and security, because it will prevent us from wisher's seeing other wisher's lists. Real quick, let's take a peek at the publication so we know what we're getting.
+
+<p class="block-header">/server/</p>
+
+```javascript
+Meteor.publish( 'list', function( listId ) {
+  check( listId, String );
+
+  return [
+    Lists.find( { _id: listId } ),
+    ListItems.find( { listId: listId } )
+  ];
+});
+```
 
 #### Adding a publication to our template
 
