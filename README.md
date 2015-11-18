@@ -1,7 +1,7 @@
 ##### The Meteor Chef
 ###### \#016 - Holiday Wish List
 
-Fill in later
+In this recipe, we're going to help Santa Claus build an app to help kids around the world build a wish list for the holidays. We'll learn how to create data anonymously, relying on `localStorage` to retrieve the current user's information, as well as how to send an email to a wisher's parents once their list is complete. We'll even look at "locking" our UI after a list is submitted to prevent double sends.
 
 [Read on The Meteor Chef](http://themeteorchef.com/recipes/holiday-wish-list)  
 
