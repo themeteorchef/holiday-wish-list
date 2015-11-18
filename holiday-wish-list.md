@@ -9,7 +9,7 @@
 </div>
 
 ### Prep
-- **Time**: 2 hours
+- **Time**: ~2 hours
 - **Difficulty**: Intermediate
 - **Additional knowledge required**: writing routes with [Flow Router](https://themeteorchef.com/snippets/client-side-routing-with-flow-router/), working with [Blaze templates](http://docs.meteor.com/#/full/templates_api), using [Meteor methods](http://docs.meteor.com/#/full/meteor_methods), and using [the module pattern](https://themeteorchef.com/snippets/using-the-module-pattern-with-meteor/).
 
@@ -25,7 +25,7 @@ Here's a quick demo of what we're after when all is said and done:
   <figcaption>The final product we're after.</figcaption>
 </figure>
 
-Good news: we've received all of the CSS we need for this application from one of Santa's designers, so all we need to do is wire up our templates and calls to the database. In this recipe, we're going to look at how to do just that.
+Good news: we've received [all of the CSS we need for this application](https://github.com/themeteorchef/holiday-wish-list/tree/master/code/client/stylesheets) from one of Santa's designers, so all we need to do is wire up our templates and calls to the database. In this recipe, we're going to look at how to do just that.
 
 ### Ingredients
 Before we start building, make sure that you've installed the following packages and libraries in your application. We'll use these at different points in the recipe, so it's best to install these now so we have access to them later.
@@ -49,7 +49,7 @@ https://github.com/voidberg/html5sortable
 To make our lists a little more flexible, we'll be relying on the [HTML5 Sortable](https://github.com/voidberg/html5sortable) library. Because this library doesn't exist as a Meteor package, we'll want to add it manually. Grab the [minified source](https://github.com/voidberg/html5sortable/blob/master/dist/html.sortable.min.js) and add it directly to your `client/lib/vendor` directory as `html5-sortable-jquery.min.js`. This will make sure that Meteor loads up the library before anything else on the client.
 
 ### Storing list data
-Before we start to set up any wish lists, we'll need a way to store them. To get started, we're going to set up two collections: `Lists` and `ListItems`. `Lists` will be the "placeholder" for our wisher's list, while `ListItems` will store each of the items _on_ their list. This data structure will gives us plenty of room for expansion, ensuring that massive lists don't aren't difficult to render (e.g. like they would be if we just nested an array of items in a single list object).
+Before we start to set up any wish lists, we'll need a way to store them. To get started, we're going to set up two collections: `Lists` and `ListItems`. `Lists` will be the "placeholder" for our wisher's list, while `ListItems` will store each of the items _on_ their list. This data structure will gives us plenty of room for expansion, ensuring that massive lists are not difficult to render (e.g. like they would be if we just nested an array of items in a single list object).
 
 #### Defining the `Lists` collection
 First up, our `Lists` collection. We're going to create a new file within `/collections` in the root of our project called `lists.js`. Let's build out the whole file below and then step through it. This pattern will be pretty similar for our `ListItems` collection, so pay attention to make sure you understand how things are wired up.
@@ -93,7 +93,7 @@ In addition to the definitions themselves, notice that we set a `type` value for
 
 <div class="note info">
   <h3>Why do schemas matter? <i class="fa fa-info"></i></h3>
-  <p>While they're by no means mandatory, using a schema ensures that the data being added to our database remains consistent. This is important for security—so users don't modify our code and insert junk data—but also for security purposes. Using schemas, we take full control of the shape of our data, preventing any junk from hitting our database.</p>
+  <p>While they're by no means mandatory, using a schema ensures that the data being added to our database remains consistent. This is important for security—so users don't modify our code and insert junk data—but also for keeping our own data consistent. Using schemas, we take full control of the shape of our data, preventing any junk from hitting our database.</p>
 </div>
 
 #### Defining the `ListItems` collection
@@ -274,11 +274,11 @@ At the top of our file, notice that we're creating a "placeholder" variable call
 
 Remember, back in our `welcome` template's `onRedered` method, we invoked this passing `Template.instance()`, or, the current instance (copy) of our `welcome` template. Think about that for a second. This means that we can access our `welcome` template from within our module without resorting to the usage of something like jQuery. Every little bit counts!
 
-After this is set, we get to work. First, we validate our form by making a call to `_validate()` which is just a wrapper around a call to the [jquery-validation]() library. This may seem pointless, but it's not. What we're accomplishing with this is the creation of single-purpose functions. That means that—to the best of our abilities—we want to ensure that each function in our module is responsible for one thing and one thing only. In this case, the `_validate()` method is only responsible for attaching a call to jQuery validation.
+After this is set, we get to work. First, we validate our form by making a call to `_validate()` which is just a wrapper around a call to the [jquery-validation](http://jqueryvalidation.org/) library. This may seem pointless, but it's not. What we're accomplishing with this is the creation of single-purpose functions. That means that—to the best of our abilities—we want to ensure that each function in our module is responsible for one thing and one thing only. In this case, the `_validate()` method is only responsible for attaching a call to jQuery validation.
 
 Inside of this call, notice that we're making a call to `validation()`, another method which returns our validation rules. Uhh, this is a bit strange. It is! The point here is to separate out all of the rules and properties for our validation into their own space. You _do not_ have to do this; it's strictly done for clarity here. If we had a bunch of different validations, this would really come in handy. Here, it's up to you.
 
-Notice that here, we have a method called `submitHandle()` calling _another_ method `_handleCreate()`. This like passing the boton in a 100 meter dash. Here, we're simply saying "when the form is valid, call the `_handleCreate()` method." Making sense? Down in that `_handleCreate()` method, we want to pay close attention to what's taking place. First, we rely on our hoisted `template` variable from earlier to grab the value of our `listName` field. Next, we make a call to a method we'll define in the next step called `createWishList`, passing the value of `listName` as the argument.
+Notice that here, we have a method called `submitHandler()` calling _another_ method `_handleCreate()`. This is like passing the boton in a 100 meter dash. Here, we're simply saying "when the form is valid, call the `_handleCreate()` method." Making sense? Down in that `_handleCreate()` method, we want to pay close attention to what's taking place. First, we rely on our hoisted `template` variable from earlier to grab the value of our `listName` field. Next, we make a call to a method we'll define in the next step called `createWishList`, passing the value of `listName` as the argument.
 
 The important part in all of this is the success callback of this call to `createWishList`. Notice that we have the line `localStorage.setItem( 'themeteorchef_dear_santa_list_id', listId );`. Can you guess what this is doing? Expecting that the new list's `_id` will be returned as the `listId` argument to our method call, we take this value and _set_ it on our `localStorage` using the `localStorage.setItem()` method. Notice that we're using the exact same name for this item as we did in our startup module a little bit ago. Here, once a list exists, we set it on the wisher's browser, preventing them from creating another one later, but also automating their access to the list they jut created.
 
@@ -301,7 +301,7 @@ Meteor.methods({
   }
 });
 ```
-Told you so! Very straightforward. First, we take in our `listName` argument passed over from the client and [using the check package](), validate that it's a `String`. If it is, inside of a `try/catch` we attempt to perform an insert into our `Lists` collection. Notice that we're defining an object with two properties being set `name` (equal to the `listName` value from the client) and `sent` equal to `false`. That second property, `sent`, is being set manually here to comply with the schema rules we set up earlier. Having this here, we ensure that our insert doesn't get blocked.
+Told you so! Very straightforward. First, we take in our `listName` argument passed over from the client and [using the check package](https://themeteorchef.com/snippets/using-the-check-package/), validate that it's a `String`. If it is, inside of a `try/catch` we attempt to perform an insert into our `Lists` collection. Notice that we're defining an object with two properties being set `name` (equal to the `listName` value from the client) and `sent` equal to `false`. That second property, `sent`, is being set manually here to comply with the schema rules we set up earlier. Having this here, we ensure that our insert doesn't get blocked.
 
 Notice that when we perform the insert, we do it without a callback and assign the insert to a variable `listId`. Huh? This is a fun trick. Without a callback, Meteor will just return either the error or `_id` of the new list, so we just return it from our method directly. Of course, we're taking a leap of faith here and assuming that the insert will function without error. To foolproof this, we'd want to update our success callback for this method on the client to check `listId` for an `error` property. We're not too concerned, now, though, so we'll leave it off.
 
@@ -360,7 +360,7 @@ Template.list.onCreated( () => {
 
 Easy peasy! Inside of our `list` template's `onCreated` method, we simply create a call to `template.subscribe` (short-handing this by storing `Template.instance()` in a variable), passing `list` as the name of the publication we'll subscribe to. The interesting part here is what we're passing in the second argument `FlowRouter.current().params._id`. Rember that when we create a new list, we're redirecting our user to `/lists/:_id`. Here, we're grabbing whatever value is currently set in the `:_id` part. Why are we passing this to our subscription? 
 
-This will make it possible to only subscribe to the list—and list items—matching that `_id`. This is both a performance and security technique. Performance, because it will prevent us from sending every list in the database down the wire, and security, because it will prevent us from wisher's seeing other wisher's lists. Real quick, let's take a peek at the publication so we know what we're getting.
+This will make it possible to only subscribe to the list—and list items—matching that `_id`. This is both a performance and security technique. Performance, because it will prevent us from sending every list in the database down the wire, and security, because it will prevent wishers from seeing other wisher's lists. Real quick, let's take a peek at the publication so we know what we're getting.
 
 <p class="block-header">/server/publications/lists.js</p>
 
@@ -398,7 +398,7 @@ Template.list.helpers({
 ```
 Simple, but important. Our first helper, `hasItems`, is the one wrapping our `{{#each items}}` block and controls the display of our items. If this returns `false`, we want to display a message to our user instructing them to add some new items. Here, we keep it super simple. Inside, we make a call to `ListItems.find( {} ).count()` which let's us know how many items are in the _client-side_ (minimongo) `ListItems` collection. We test to see if this number is greater than zero `> 0`. By returning this directly, we get either a  `true` or `false` response, toggling our template accordingly.
 
-The big stuff is down below in the `items` helper. Albeit simple, this helper is responsible for actually _displaying_ the items in our list. Here, we make a call to `ListItems.find( {} )` (again, this is the client-side data store we're looking at so no need to pass the `listId`), sorting the list by the `order` field on each item. This is pretty insignificant now, but later, we'll enable drag-and-drop support to our list which will allow our wisher to reorder the items in their list. We'll be tracking that order using the `order` field, so it's good to account for that now with this sort.
+The big stuff is down below in the `items` helper. Albeit simple, this helper is responsible for actually _displaying_ the items in our list. Here, we make a call to `ListItems.find( {} )` (again, this is the client-side data store we're looking at so no need to pass the `listId`), sorting the list by the `order` field on each item. This is pretty insignificant now, but later, we'll add drag-and-drop support to our list which will allow our wisher to reorder the items in their list. We'll be tracking that order using the `order` field, so it's good to account for that now with this sort.
 
 From here, if we have items: we display them. Back in our template we're just spitting this data out using an `{{#each items}}` block. Inside of that block, we make a call to `{{> listItem}}`. That template is pretty much what you'd expect, but let's take a peek so it's clear.
 
@@ -419,7 +419,7 @@ From here, if we have items: we display them. Back in our template we're just sp
 </template>
 ```
 
-See! Easy. A few things to point out. First, notice that we're setting a `data-id` attribute on each of the list item's we're outputting. Why? Well, when we dig into the drag-and-drop stuff later, this will make it easy to handle reset the order of items in the list. Just note it's existence for now, we'll review how it works later. Another thing to note is that we technically have two styles of list items: with and without a link. 
+See! Easy. A few things to point out. First, notice that we're setting a `data-id` attribute on each of the list item's we're outputting. Why? Well, when we dig into the drag-and-drop stuff later, this will make it easy to handle resetting the order of items in the list. Just note it's existence for now, we'll review how it works later. Another thing to note is that we technically have two styles of list items: with and without a link. 
 
 Because adding a link is optional (a wisher can add a plain item), we account for this here. If an item has a link, we wrap it's name in an `<a></a>` tag pointing to the passed URL. If not, we just return the `{{name}}` value. Notice that both styles have `{{order}}.` included. This will display the current order of the item in the list as it's stored in the database. 
 
@@ -585,7 +585,7 @@ Next up is something to pay attention to. Here, we quickly grab the count of the
 
 Because we'll be using drag-and-drop in a bit, we want to prevent messing up any existing ordering. To do that, we simply say that all new items should be appended to the bottom of the list. This means that item will need to receive an order value placing it in the last spot. In this case, that means the current length of the list _plus one more item_. Pretty freaking clever, eh? We are _so_ badass.
 
-Once we have this set, we just toss our `listItem` object straight into our call to `ListItems.insert()`. If all goes as planned, our list item will be inserted into the database! [Gnarly](https://youtu.be/hJdF8DJ70Dc?t=5s). Okay, so, we have items on our list, so it's time to dig into the trickiest part—though not too difficult—part of the recipe: sorting items with drag-and-drop.
+Once we have this set, we just toss our `listItem` object straight into our call to `ListItems.insert()`. If all goes as planned, our list item will be inserted into the database! [Gnarly](https://youtu.be/hJdF8DJ70Dc?t=5s). Okay, so, we have items on our list, so it's time to dig into the trickiest part—though not too difficult—part of the recipe: sorting lists with drag-and-drop.
 
 ### Sorting lists with drag-and-drop
 To kick off our drag-and-drop journey, the first thing we'll want to do is set up our starting point. Because our draggble list will existing within our `list` template, let's update that template's logic now. We'll be using a module for this, so all we need to do is add a call to that module in the `list` template's `onRendered` callback.
@@ -605,7 +605,7 @@ Template.list.onRendered( () => {
 [...]
 ```
 
-Making sense? Pay close attention. Instead of calling our `dragDrop` module directly, here, we're actually making a call to a method that we'll expose called `init`. Don't worry about the details now, but the gist of this idea is that we'll have another method we'll need to expose later, so we account for this now. For arguments, we pass to things `sortableElement`, referring to the class name of the sortable _list_ element, and `sortableItems`, referring to the items in our list that can be sorted. Again, patience, this will all make sense soon. Let's hop over to our module definition and see how it's coming together.
+Making sense? Pay close attention. Instead of calling our `dragDrop` module directly, here, we're actually making a call to a method that we'll expose called `init`. Don't worry about the details now, but the gist of this idea is that we'll have another method we'll need to expose later, so we account for this now. For arguments, we pass two things: `sortableElement`, referring to the class name of the sortable _list_ element, and `sortableItems`, referring to the items in our list that can be sorted. Again, patience, this will all make sense soon. Let's hop over to our module definition and see how it's coming together.
 
 <p class="block-header">/client/modules/drag-drop.js</p>
 
@@ -661,7 +661,7 @@ Modules.client.dragDrop = {
 };
 ```
 
-What in the _blue blazes_? Deep breaths. This looks like a lot, but it's pretty straightforward. The first thing to call out is at the very bottom. Notice that instead of turning a single method here, we're setting our module namespace equal to an _object_. What this achieves is what we just saw back in our `list` template's logic. By returning an object, we can expose multiple methods within this file. As we can see here, we're trying to expose our `dragDrop` method and our `updateListItemOrder` method separately.
+What in the _blue blazes_? Deep breaths. This looks like a lot, but it's pretty straightforward. The first thing to call out is at the very bottom. Notice that instead of returning a single method here, we're setting our module namespace equal to an _object_. What this achieves is what we just saw back in our `list` template's logic. By returning an object, we can expose multiple methods within this file. As we can see here, we're trying to expose our `dragDrop` method and our `updateListItemOrder` method separately.
 
 It may seem a bit foreign, but if we call `Modules.client.dragDrop.setIndexes()`, we're technically calling `Modules.client.dragDrop.updateListItemOrder()`. The name changes here are just to keep our methods a bit shorter. Pay attention to the mapping here and how our arguments are passing through. See it? This is _really_, really useful when a module contains more than one method that you can benefit from using publicly.
 
@@ -737,7 +737,7 @@ One thing to call out before we take a peek at the server. Down in the `else` st
 
 Don't put on your party pants just yet. Let's hop up to the server to see the removal real quick.
 
-<p class="block-header">/path</p>
+<p class="block-header">/both/methods/remove/list-items.js</p>
 
 ```javascript
 Meteor.methods({
@@ -867,7 +867,7 @@ Okay! So at this point, we have our toggling all wired up and we just need a tem
 ```
 Just a single field! Remember, we want to keep this simple for wishers. We'll wire up this form next, but real quick, look at those two buttons near the bototm of the template. See the one with the class `cancel-send`? This is our "abort" button that will toggle our list view back to its original state. Let's wire that up before we handle the send.
 
-<p class="block-header">/client/templates/public/list.html</p>
+<p class="block-header">/client/templates/public/list.js</p>
 
 ```javascript
 Template.list.events({
@@ -1097,7 +1097,7 @@ This will be quick, promise! Just one tiny edit to our `list` template. Here's t
   </div>
 </template>
 ```
-Spot it? We're adding _one more_ `{{#unless}}` block around everything that's looking at a helper we need to define `hasBeenSent`. The name should be pretty descriptive, but what we're trying to verify is whether or not the current list has been sent (remember we just set this up to be toggled to `true` on the server _after_ the email has been sent). If it _hasn't_, we want to show either our list and add list item templates, or, our `{{> sendList}}` template. If it _has_ been sent, we want to override everything and display our `{{> sendConfirmation}}` template. Making sense?
+Spot it? We're adding _one more_ `{{#unless}}` block around everything that's looking at [a helper we need to define](https://github.com/themeteorchef/holiday-wish-list/blob/master/code/client/templates/public/list.js#L15) `hasBeenSent`. The name should be pretty descriptive, but what we're trying to verify is whether or not the current list has been sent (remember we just set this up to be toggled to `true` on the server _after_ the email has been sent). If it _hasn't_, we want to show either our list and add list item templates, or, our `{{> sendList}}` template. If it _has_ been sent, we want to override everything and display our `{{> sendConfirmation}}` template. Making sense?
 
 Let's wire up that `{{> sendConfirmation}}` template quick. It's purely visual, so this is the last step!
 
@@ -1116,4 +1116,4 @@ Let's wire up that `{{> sendConfirmation}}` template quick. It's purely visual, 
 Boom! Done. Now, with all of our logic, once a list is sent, our wisher will see a note that their list has been sent via Reindeer Express (Santa's preferred mail service). Even better, we've fulfilled all of Santa's requirements because now, if our wisher visits our app again, they'll automatically be redirected to this confirmation. No double sends. No extra lists. Ho, ho, _ho_, indeed.
 
 ### Wrap up & summary
-In this recipe, we learned how to build a user-free system by storing data using local storage. We learned about setting and getting values from local storage and how to leverage those values to control state in our applications. We also learned how to use drag and drop in our application to sort items and how to send off an HTML email! Santa is jolly and happy. Our work is done here.
+In this recipe, we learned how to build a user-free system by storing data using local storage. We learned about setting and getting values from local storage and how to leverage those values to control state in our applications. We also learned how to use drag and drop in our application to sort items and how to send off an HTML email! Santa is jolly and happy. Our work is done here!
