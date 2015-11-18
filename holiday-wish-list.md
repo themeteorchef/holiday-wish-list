@@ -1046,3 +1046,74 @@ With this rendered, we return it. Back in our `_prepareAndsendList()` method, we
 Just one last thing to point out in here. See that very last method in our file `_markListAsSent()`? This is important. If we look back up in our `send` method, we can see this being called after `_prepareAndSendList()`. What this is doing is toggling the `sent` field on the passed `listId` to be `true`. What does that accomplish? Well, this let's us know—or rather, confirms—that our wisher's list has been sent. Remember, Santa wants to avoid double sends at all costs. We've _mostly_ solved this, but we can go one step further. With this module complete, let's head back to the client and make one last change to our `list` template.
 
 ### Adding a send confirmation
+This will be quick, promise! Just one tiny edit to our `list` template. Here's the finished template:
+
+<p class="block-header">/client/templates/public/list.html</p>
+
+```markup
+<template name="list">
+  <div class="santa-pod santa-list">
+    <div class="sp-content">
+      <div class="santa"></div>
+
+      {{#unless hasBeenSent}}
+        {{#unless sending}}
+          {{#if hasItems}}
+            <div class="send-bar">
+              <a href="#" class="btn btn-success btn-small send-to-santa"><i class="fa fa-envelope"></i> Send to North Pole</a>
+            </div>
+          {{/if}}
+
+          <h3>Dear Santa,</h3>
+          <p>For the holidays, I would really like it if you could send me...</p>
+
+          {{#if Template.subscriptionsReady}}
+            {{#if hasItems}}
+              <ul class="list-group sortable">
+                {{#each items}}
+                  {{> listItem}}
+                {{/each}}
+              </ul>
+              <p class="text-muted hint"><i class="fa fa-lightbulb-o"></i> <strong>Wish tip</strong>: drag and drop items in your list to make sure Santa Claus knows which items are most important!</p>
+            {{else}}
+              <p class="alert alert-warning">No items yet! Add some using the boxes below so Santa Claus knows what you want :)</p>
+            {{/if}}
+          {{else}}
+            <p>Loading your list...</p>
+          {{/if}}
+          {{> addListItem}}
+        {{else}}
+          {{> sendList}}
+        {{/unless}}
+      {{else}}
+        {{> sendConfirmation}}
+      {{/unless}}
+
+      <div class="presented-by">
+        <span>A gift from</span>
+        <a href="https://themeteorchef.com"><img src="/images/tmc-logo.png" alt="The Meteor Chef"></a>
+      </div>
+    </div>
+  </div>
+</template>
+```
+Spot it? We're adding _one more_ `{{#unless}}` block around everything that's looking at a helper we need to define `hasBeenSent`. The name should be pretty descriptive, but what we're trying to verify is whether or not the current list has been sent (remember we just set this up to be toggled to `true` on the server _after_ the email has been sent). If it _hasn't_, we want to show either our list and add list item templates, or, our `{{> sendList}}` template. If it _has_ been sent, we want to override everything and display our `{{> sendConfirmation}}` template. Making sense?
+
+Let's wire up that `{{> sendConfirmation}}` template quick. It's purely visual, so this is the last step!
+
+<p class="block-header">/client/templates/public/send-confirmation.html</p>
+
+```markup
+<template name="sendConfirmation">
+  <div class="send-confirmation">
+    <h3>List sent!</h3>
+    <img src="https://tmc-post-content.s3.amazonaws.com/reindeer-express.png" alt="Reindeer Express">
+    <p>We've whisked your list off via Reindeer Express. Your parent or guardian should get it pretty soon. Don't forget to remind them to send it to Santa when you see them next :)</p>
+  </div>
+</template>
+```
+
+Boom! Done. Now, with all of our logic, once a list is sent, our wisher will see a note that their list has been sent via Reindeer Express (Santa's preferred mail service). Even better, we've fulfilled all of Santa's requirements because now, if our wisher visits our app again, they'll automatically be redirected to this confirmation. No double sends. No extra lists. Ho, ho, _ho_, indeed.
+
+### Wrap up & summary
+In this recipe, we learned how to build a user-free system by storing data using local storage. We learned about setting and getting values from local storage and how to leverage those values to control state in our applications. We also learned how to use drag and drop in our application to sort items and how to send off an HTML email! Santa is jolly and happy. Our work is done here.
