@@ -755,4 +755,56 @@ Meteor.methods({
 _Sad trombone_. No, not really, but this is pretty underwhelming (a good thing). All we do here is take the ID of the list item we passed over from the client and `check()` it's type. From there, it's down the chute when we call the `ListItems.remove()` method. Poof! How easy was that? 
 
 ### Emailing lists
-Okay, this is it! The grand finale. We have _one last step_ to complete and we can consider this ready for all of Santa's wishers. 
+Okay, this is it! The grand finale. We have _one last step_ to complete and we can consider this ready for all of Santa's wishers. To get this working, we're going to need to make some edits to our `list` template. Instead of sending wishers to another view when they want to send an email, we're going to do everything inline. Why? This will make it easy for us to further enforce the "no double send" rule Santa requires. Using a bit of template logic, we'll "lock" the interface so that once a user sends their list, there's no turning back (it's not a as evil as it sounds).
+
+To get things underway, we need to start by updating our list template to toggle the visibility of the list and add item form when we click a "Send to North Pole" button. We don't have that button yet, so let's update our template now. We're going to add three things: the button, a wrapper around our content to show/hide our content, and a new template for sending the list.
+
+<p class="block-header">/client/templates/public/list.html</p>
+
+```markup
+<template name="list">
+  <div class="santa-pod santa-list">
+    <div class="sp-content">
+      <div class="santa"></div>
+      
+      {{#unless sending}}
+        {{#if hasItems}}
+          <div class="send-bar">
+            <a href="#" class="btn btn-success btn-small send-to-santa"><i class="fa fa-envelope"></i> Send to North Pole</a>
+          </div>
+        {{/if}}
+        
+        <h3>Dear Santa,</h3>
+        <p>For the holidays, I would really like it if you could send me...</p>
+
+        {{#if Template.subscriptionsReady}}
+          {{#if hasItems}}
+            <ul class="list-group sortable">
+              {{#each items}}
+                {{> listItem}}
+              {{/each}}
+            </ul>
+            <p class="text-muted hint"><i class="fa fa-lightbulb-o"></i> <strong>Wish tip</strong>: drag and drop items in your list to make sure Santa Claus knows which items are most important!</p>
+          {{else}}
+            <p class="alert alert-warning">No items yet! Add some using the boxes below so Santa Claus knows what you want :)</p>
+          {{/if}}
+        {{else}}
+          <p>Loading your list...</p>
+        {{/if}}
+        {{> addListItem}}
+      {{else}}
+        {{> sendList}}
+      {{/unless}}
+
+      <div class="presented-by">
+        <span>A gift from</span>
+        <a href="https://themeteorchef.com"><img src="/images/tmc-logo.png" alt="The Meteor Chef"></a>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+See what's changing here? First, all of our existing content has been nested within a new block `{{#unless sending}}`. What does this do? This is saying "unless the `sending` helper is returning `true`, show our list and add list item form." If the `sending` helper _is_ returning `true`, however, we want to  show our new `{{> sendList}}` template. To get access to that view, though, we need a way to toggle the state of that `sending` helper. How do we do it?
+
+Notice that we've also added something just inside the `{{#unless sending}}` block. See that `{{#if hasItems}}` block? This is wrapping a button that will display when the list has one or more items. This is the button we'll use to toggle between our list and add list item form and our soon-to-be `{{> sendList}}` template. Before we set up that template, let's add some logic to our `list` template to help us handle the toggling between states.
