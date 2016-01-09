@@ -5,13 +5,13 @@
 
 <div class="note">
   <h3>Additional Packages <i class="fa fa-warning"></i></h3>
-  <p>This recipe relies on several other packages that come as part of <a href="http://themeteorchef.com/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed below are merely recipe-specific additions to the packages that are included by default in the kit. Make sure to reference the <a href="http://themeteorchef.com/base/packages-included">Packages Included list</a> for Base to ensure you have fulfilled all of the dependencies.</p>
+  <p>This recipe relies on several other packages that come as part of <a href="https://themeteorchef.com/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed below are merely recipe-specific additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://themeteorchef.com/base/packages-included">Packages Included list</a> for Base to ensure you have fulfilled all of the dependencies.</p>
 </div>
 
 ### Prep
 - **Time**: ~2 hours
 - **Difficulty**: Intermediate
-- **Additional knowledge required**: writing routes with [Flow Router](https://themeteorchef.com/snippets/client-side-routing-with-flow-router/), working with [Blaze templates](http://docs.meteor.com/#/full/templates_api), using [Meteor methods](http://docs.meteor.com/#/full/meteor_methods), and using [the module pattern](https://themeteorchef.com/snippets/using-the-module-pattern-with-meteor/).
+- **Additional knowledge required**: writing routes with [Flow Router](https://themeteorchef.com/snippets/client-side-routing-with-flow-router/), working with [Blaze templates](https://docs.meteor.com/#/full/templates_api), using [Meteor methods](https://docs.meteor.com/#/full/meteor_methods), and using [the module pattern](https://themeteorchef.com/snippets/using-the-module-pattern-with-meteor/).
 
 ### What are we building?
 After getting in touch with us to build him [a tracking system](https://themeteorchef.com/recipes/santa-spotter/) last year, Santa is back with a big new idea: digital wish lists. He receives _tons_ of wish lists every year and wants to get a hold on things. "I don't have time for paper," was a phrase he kept mentioning when asking us to work on this project. To help him out, we've suggested making use of Meteor again to get a quick, simple app out the door. He's sold.
@@ -679,7 +679,7 @@ Looking at the `_setDragDrop()` method, we see two things happening. First, we d
 
 Inside of `_setChangeEvent()` we do just that! Here, we take the same approach as the `_setDragDrop()` method, unbinding any existing `sortupdate` events from our list and then reapply it. This may be a bit confusing. What we're doing here is registering an event to watch for _later_. More specifically, the `sortupdate` event will fire whenever our user makes a change to the order of their list. When they do, we want to update the order of the items in that list in the database (read: updating each item's `order` property in the database).
 
-To do _that_, we have one last method being defined: `updateListItemOrder`. This is the coolest method here. What we're doing inside is take the `items` argument—remember, this is equal to our `.sortable li` selector—and iterating over each of the matching items using jQuery's [each](http://api.jquery.com/jquery.each/) method. For each item found, we create an object called `item` containing two properties: `_id` and `order`. Remember earlier when we set `data-id` on each of our `<li></li>` elements in the `{{> listItem}}` template? This is where we make use of it.
+To do _that_, we have one last method being defined: `updateListItemOrder`. This is the coolest method here. What we're doing inside is take the `items` argument—remember, this is equal to our `.sortable li` selector—and iterating over each of the matching items using jQuery's [each](https://api.jquery.com/jquery.each/) method. For each item found, we create an object called `item` containing two properties: `_id` and `order`. Remember earlier when we set `data-id` on each of our `<li></li>` elements in the `{{> listItem}}` template? This is where we make use of it.
 
 Using this, we can grab the `_id` of the element we need to update. In the `order` field, we simply take the `index` value from the `.each()` loop and add one to it. Why one? Because technically the index starts at `0`. To avoid confusion, adding `1` means that items in our list will always start at `1` and increment from there. Cool! Notice that once our object is built, we make a call to a new method `updateListItemOrder`, passing our `item` object.
 
